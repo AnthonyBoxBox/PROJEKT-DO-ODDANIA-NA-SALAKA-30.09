@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background: #f4f4f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .converter {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    label, select, input, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    #result {
+      margin-top: 15px;
+      padding: 10px;
+      background: #acfcac;
+      border-radius: 5px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #history {
+      margin-top: 20px;
+      padding: 10px;
+      background: #fff8e0bf;
+      border-radius: 5px;
+    }
+    .modal {
+        display: none; 
+        position: fixed;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        overflow-y: scroll;
+    }
+    .modal-content {
+        background: white;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 10px;    
+        width: 400px;
+    }
+    .close {
+        float: right;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    #showModal{
+        width: 20%;
+        background-color: aqua;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Konwerter jednostek</h1>
+  <div class="converter">
+    <label for="value">Wartość:</label>
+    <input type="number" id="value" placeholder="Podaj liczbę" step="any">
+
+    <label for="type">Rodzaj konwersji:</label>
+    <select id="type">
+      <option value="feetToMeters">Stopy ➝ Metry</option>
+      <option value="metersToFeet">Metry ➝ Stopy</option>
+      
+      <option value="kgToGrams">Kilogramy ➝ Gramy</option>
+      <option value="gramsToKg">Gramy ➝ Kilogramy</option>
+      
+      <option value="kgToMg">Kilogramy ➝ Miligramy</option>
+      <option value="mgToKg">Miligramy ➝ Kilogramy</option>
+      
+      <option value="cmToDm">Centymetry ➝ Decymetry</option>
+      <option value="dmToCm">Decymetry ➝ Centymetry</option>
+      
+      <option value="kmToMeters">Kilometry ➝ Metry</option>
+      <option value="metersToKm">Metry ➝ Kilometry</option>
+    </select>
+
+    <button id="convert">Przelicz</button>
+    <div id="result"></div>
+
+    <div id="history">
+      <h3>Historia przeliczeń</h3>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal" class="close">&times;</span>
+      <h2>Pełna historia</h2>
+      <ul id="fullHistory"></ul>
+    </div>
+  </div>
+  
+  <button id="showModal">Pokaż całą historię</button>
+
+  <script>
+    $(document).ready(function() {
+        
+
+        function saveHistory(entry){
+            let history = JSON.parse(localStorage.getItem("history")) || []
+            history.unshift(entry)
+            
+            localStorage.setItem("history", JSON.stringify(history))
+
+        }
+
+        function loadHistory(){
+            let history = JSON.parse(localStorage.getItem("history")) || [];
+            $("#historyList").empty();
+            let limitedHistory = history.slice(0, 10); 
+            limitedHistory.forEach(function(item) {
+                $("#historyList").append("<li>" + item + "</li>"); 
+            });
+
+        }
+
+
+
+        $("#showModal").click(function () {
+            let history = JSON.parse(localStorage.getItem("history")) || [];
+            $("#fullHistory").empty();
+            history.forEach(item => {
+                $("#fullHistory").append("<li>" + item + "</li>");
+            });
+            $("#myModal").fadeIn();
+        });
+
+
+        $("#closeModal").click(function(){
+            $("#myModal").fadeOut();
+        })
+
+
+        $(window).click(function (e) {
+            if ($(e.target).is("#myModal")) {
+                 $("#myModal").fadeOut();
+            }
+        });
+
+
+        $("#convert").click(function(){
+
+            let value = parseFloat($("#value").val())
+            let type = $("#type").val()
+            let result
+            
+            if(isNaN(value)) {
+                $("#result").text("Podaj poprawna wartość!!!")
+                return;
+            }
+        
+        
+            switch(type){
+                case "feetToMeters":
+                    result = (value * 0.3048).toFixed(3) + "m";
+                    break;
+                case "metersToFeet":
+                    result = (value / 0.3048).toFixed(3) + "ft";
+                    break;
+                case "kgToGrams":
+                    result = (value * 1000) + "g"
+                    break;
+                
+                case "gramsToKg":
+                    result = (value / 1000).toFixed(3) + "kg"; 
+                    break;
+                case "kgToMg":
+                    result = (value * 1000000) + "mg";
+                    break;
+                case "mgToKg":
+                    result = (value / 1000000).toFixed(3) + "kg";
+                    break;
+                case "cmToDm":
+                    result = (value / 10).toFixed(3) + "dm";
+                    break;
+                case "dmToCm":
+                    result = (value * 10) + "cm";
+                    break;
+                case "kmToMeters":
+                    result = (value * 1000) + "m";
+                    break;
+                case "metersToKm":
+                    result = (value / 1000) + "km";
+                    break;
+                default:
+                    result = "Błąd";
+
+            }
+            $("#result").text("Wynik: " + result);
+            let hEntry = value + "(" + $("#type option:selected").text() + ") = " + result;
+            
+            saveHistory(hEntry);
+            loadHistory()
+        })
+        
+        loadHistory()
+    
+    });
+  </script>
+</body>
+</html>
+
